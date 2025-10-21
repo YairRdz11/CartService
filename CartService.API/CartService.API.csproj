@@ -7,8 +7,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="12.0.1" />
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
+    <PackageReference Include="LiteDB" Version="5.0.21" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
-    <PackageReference Include="YairUtilities.ApiUtilities" Version="1.0.2" />
+  <PackageReference Include="YairUtilities.ApiUtilities" Version="1.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CartService.BLL\CartService.BLL.csproj" />
+    <ProjectReference Include="..\CartService.DAL\CartService.DAL.csproj" />
+    <ProjectReference Include="..\CartService.Transversal\CartService.Transversal.csproj" />
   </ItemGroup>
 
 </Project>
