@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using Asp.Versioning;
+using AutoMapper;
 using CartService.Transversal.Classes.DTOs;
 using CartService.Transversal.Classes.Models;
 using CartService.Transversal.Interfaces.BLL;
@@ -6,10 +7,11 @@ using Microsoft.AspNetCore.Mvc;
 using YairUtilities.ApiUtilities.Classes.Common;
 using YairUtilities.CommonUtilities.Classes.Common;
 
-namespace CartService.API.Controllers
+namespace CartService.API.Controllers.v1
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/v{version:apiVersion}/[controller]")]
+    [ApiVersion("1.0")]
     public class CartController : ApiControllerBase
     {
         private readonly ICartService _cartService;

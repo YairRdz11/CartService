@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36616.10 d17.14
+VisualStudioVersion = 17.14.36616.10
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CartService.API", "CartService.API\CartService.API.csproj", "{BEC46884-8918-4ECA-913B-77D7F9BB529F}"
 EndProject
@@ -10,6 +10,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CartService.DAL", "CartService.DAL\CartService.DAL.csproj", "{EE4A965E-3318-4C87-B95A-B9DEC06C115F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CartService.Transversal", "CartService.Transversal\CartService.Transversal.csproj", "{CF52F11D-5B42-4898-ADB2-8AD833937F15}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "01.API", "01.API", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,6 +38,12 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{BEC46884-8918-4ECA-913B-77D7F9BB529F} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{F734FB63-84B8-408C-A300-02873551135A} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{EE4A965E-3318-4C87-B95A-B9DEC06C115F} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{CF52F11D-5B42-4898-ADB2-8AD833937F15} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DA0EA953-9967-4162-B5BF-9636AFBF9EFC}
