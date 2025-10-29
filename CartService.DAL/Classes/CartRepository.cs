@@ -30,6 +30,7 @@ namespace CartService.DAL.Classes
                 Items = cart.Items.Select(item => new CartItemDTO
                 {
                     ProductId = item.ProductId,
+                    Name = item.Name,
                     ImageUrl = item.ImageUrl,
                     Quantity = item.Quantity,
                     Price = item.Price
