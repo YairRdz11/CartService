@@ -2,6 +2,7 @@
 {
     public class CartDTO
     {
+        // Renamed back to Id to align with repository and mapping profile
         public Guid Id { get; set; }
         public string? UserId { get; set; }
         public DateTime? CreatedAt { get; set; }

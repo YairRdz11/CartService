@@ -1,6 +1,7 @@
 ﻿using CartService.DAL.Classes.Entities;
 using CartService.Transversal.Classes.DTOs;
 using CartService.Transversal.Interfaces.DAL;
+using Common.Utilities.Classes.Exceptions;
 using LiteDB;
 
 namespace CartService.DAL.Classes
@@ -20,7 +21,7 @@ namespace CartService.DAL.Classes
 
             if (cart == null)
             {
-                return null;
+                throw new NotFoundException("Cart", id);
             }
 
             var cartDto = new CartDTO

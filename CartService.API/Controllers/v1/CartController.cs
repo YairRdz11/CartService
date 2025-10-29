@@ -1,11 +1,12 @@
 ﻿using Asp.Versioning;
 using AutoMapper;
 using CartService.Transversal.Classes.DTOs;
-using CartService.Transversal.Classes.Models;
+using CartService.Transversal.Classes.Models.Request;
+using CartService.Transversal.Classes.Models.Response;
 using CartService.Transversal.Interfaces.BLL;
+using Common.ApiUtilities.Classes.Common;
+using Common.Utilities.Classes.Common;
 using Microsoft.AspNetCore.Mvc;
-using YairUtilities.ApiUtilities.Classes.Common;
-using YairUtilities.CommonUtilities.Classes.Common;
 
 namespace CartService.API.Controllers.v1
 {
@@ -28,23 +29,24 @@ namespace CartService.API.Controllers.v1
         public ActionResult<CartDTO> GetCart([FromRoute] Guid id)
         {
             var cart = _cartService.GetCartById(id);
+            var cartResponse = _mapper.Map<CartResponse>(cart);
             return Ok(new ApiResponse
             {
-                Result = cart,
+                Result = cartResponse,
                 Status = 200
             });
         }
 
         [HttpPost]
         [Route("{id:guid}/items")]
-        public ActionResult<CartDTO> AddItem([FromRoute] Guid id, [FromBody] CartItemModel cartItem)
+        public ActionResult<CartDTO> AddItem([FromRoute] Guid id, [FromBody] CartItemRequest cartItem)
         {
             var cartItemDto = _mapper.Map<CartItemDTO>(cartItem);
             var updatedCart = _cartService.AddItemToCart(id, cartItemDto);
-
+            var updatedCartResponse = _mapper.Map<CartResponse>(updatedCart);
             return Ok(new ApiResponse
             {
-                Result = updatedCart,
+                Result = updatedCartResponse,
                 Status = 201
             });
         }

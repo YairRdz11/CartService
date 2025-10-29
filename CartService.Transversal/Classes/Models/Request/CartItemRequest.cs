@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace CartService.Transversal.Classes.Models
+namespace CartService.Transversal.Classes.Models.Request
 {
-    public class CartItemModel
+    public class CartItemRequest
     {
         [Required]
         public Guid ProductId { get; set; }

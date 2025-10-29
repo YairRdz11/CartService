@@ -4,8 +4,8 @@ using CartService.DAL.Classes;
 using CartService.Transversal.Classes.Mappings;
 using CartService.Transversal.Interfaces.BLL;
 using CartService.Transversal.Interfaces.DAL;
+using Common.ApiUtilities.Middleware;
 using LiteDB;
-using YairUtilities.ApiUtilities.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
