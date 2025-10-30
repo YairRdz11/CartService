@@ -1,10 +1,11 @@
 ﻿using CartService.Transversal.Classes.DTOs;
+using CartService.Transversal.Interfaces.Base;
 
 namespace CartService.Transversal.Interfaces.DAL
 {
-    public interface ICartRepository
+    public interface ICartRepository : IBase
     {
-        CartDTO GetCartById(Guid id);
         CartDTO SaveCart(CartDTO cart);
+        bool CartExists(Guid id);
     }
 }

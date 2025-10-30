@@ -16,7 +16,17 @@ namespace CartService.BLL.Classes
 
         public CartDTO AddItemToCart(Guid cartId, CartItemDTO cartItem)
         {
-            var cart = _cartRepository.GetCartById(cartId);
+
+            var cart = new CartDTO();
+
+            if(_cartRepository.CartExists(cartId))
+            {
+                cart = _cartRepository.GetCartById(cartId);
+            }
+            else
+            {
+                cart.Build(cartId);
+            }
 
             cart.Items.Add(cartItem);
 

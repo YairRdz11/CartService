@@ -15,7 +15,14 @@ namespace CartService.DAL.Classes
             _db = db;
         }
 
-        public CartDTO? GetCartById(Guid id)
+        public bool CartExists(Guid id)
+        {
+            var cart = _db.GetCollection<Cart>("carts").FindById(id);
+
+            return cart != null;
+        }
+
+        public CartDTO GetCartById(Guid id)
         {
             var cart =  _db.GetCollection<Cart>("carts").FindById(id);
 
@@ -66,6 +73,7 @@ namespace CartService.DAL.Classes
                 Items = entity.Items.Select(item => new CartItemDTO
                 {
                     ProductId = item.ProductId,
+                    Name = item.Name,
                     ImageUrl = item.ImageUrl,
                     Quantity = item.Quantity,
                     Price = item.Price
