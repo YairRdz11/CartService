@@ -80,5 +80,39 @@ namespace CartService.DAL.Classes
                 }).ToList()
             };
         }
+
+        public int UpdateProductInfo(Guid productId, string? name, decimal? price, Guid? categoryId)
+        {
+            var cartsCol = _db.GetCollection<Cart>("carts");
+            var affected = 0;
+
+            foreach (var cart in cartsCol.FindAll())
+            {
+                var changed = false;
+                foreach (var item in cart.Items)
+                {
+                    if (item.ProductId == productId)
+                    {
+                        if (name != null && item.Name != name)
+                        {
+                            item.Name = name;
+                            changed = true;
+                        }
+                        if (price.HasValue && item.Price != price.Value)
+                        {
+                            item.Price = price.Value;
+                            changed = true;
+                        }
+                    }
+                }
+                if (changed)
+                {
+                    cartsCol.Upsert(cart);
+                    affected++;
+                }
+            }
+
+            return affected;
+        }
     }
 }

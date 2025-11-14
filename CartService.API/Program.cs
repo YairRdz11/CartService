@@ -1,4 +1,6 @@
 using Asp.Versioning;
+using CartService.API.Infrastructure.RabbitMq;
+using CartService.BLL;
 using CartService.BLL.Classes;
 using CartService.DAL.Classes;
 using CartService.Transversal.Classes.Mappings;
@@ -6,6 +8,7 @@ using CartService.Transversal.Interfaces.BLL;
 using CartService.Transversal.Interfaces.DAL;
 using Common.ApiUtilities.Middleware;
 using LiteDB;
+using RabbitMQ.Client;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,7 +29,6 @@ builder.Services.AddAutoMapper(typeof(MappingProfile));
 builder.Services.AddScoped<ICartService, CartServiceBL>();
 builder.Services.AddScoped<ICartRepository, CartRepository>();
 
-
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -34,6 +36,24 @@ builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new() { Title = "Cart API", Version = "v1" });
 });
+
+builder.Services.Configure<RabbitMqSettings>(builder.Configuration.GetSection("RabbitMq"));
+
+builder.Services.AddSingleton<IConnection>(sp =>
+{
+    var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<RabbitMqSettings>>().Value;
+    var factory = new ConnectionFactory
+    {
+        HostName = settings.HostName,
+        Port = settings.Port,
+        UserName = settings.UserName,
+        Password = settings.Password
+    };
+    return factory.CreateConnectionAsync("cart-service-listener").GetAwaiter().GetResult();
+});
+
+builder.Services.AddScoped<ProductUpdateService>();
+builder.Services.AddHostedService <ProductUpdateListener>();
 
 var apiVersioningBuilder = builder.Services.AddApiVersioning(options =>
 {
