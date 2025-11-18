@@ -8,5 +8,6 @@ namespace CartService.Transversal.Interfaces.DAL
         CartDTO SaveCart(CartDTO cart);
         bool CartExists(Guid id);
         int UpdateProductInfo(Guid productId, string? name, decimal? price, Guid? categoryId);
+        int RemoveProduct(Guid productId);
     }
 }

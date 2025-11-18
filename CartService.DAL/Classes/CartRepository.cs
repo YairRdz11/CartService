@@ -114,5 +114,24 @@ namespace CartService.DAL.Classes
 
             return affected;
         }
+
+        public int RemoveProduct(Guid productId)
+        {
+            var cartsCol = _db.GetCollection<Cart>("carts");
+            var affected =0;
+
+            foreach (var cart in cartsCol.FindAll())
+            {
+                var before = cart.Items.Count;
+                cart.Items = cart.Items.Where(i => i.ProductId != productId).ToList();
+                if (cart.Items.Count != before)
+                {
+                    cartsCol.Upsert(cart);
+                    affected++;
+                }
+            }
+
+            return affected;
+        }
     }
 }

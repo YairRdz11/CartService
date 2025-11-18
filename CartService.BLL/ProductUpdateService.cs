@@ -15,5 +15,10 @@ namespace CartService.BLL
         {
             return _repo.UpdateProductInfo(productId, name, price, categoryId);
         }
+
+        public int ApplyProductDeletion(Guid productId)
+        {
+            return _repo.RemoveProduct(productId);
+        }
     }
 }

@@ -7,6 +7,7 @@ using CartService.Transversal.Classes.Mappings;
 using CartService.Transversal.Interfaces.BLL;
 using CartService.Transversal.Interfaces.DAL;
 using Common.ApiUtilities.Middleware;
+using Common.Utilities.Classes.Messaging.Options;
 using LiteDB;
 using RabbitMQ.Client;
 
@@ -37,16 +38,16 @@ builder.Services.AddSwaggerGen(options =>
     options.SwaggerDoc("v1", new() { Title = "Cart API", Version = "v1" });
 });
 
-builder.Services.Configure<RabbitMqSettings>(builder.Configuration.GetSection("RabbitMq"));
+builder.Services.Configure<RabbitMqOptions>(builder.Configuration.GetSection("RabbitMq"));
 
 builder.Services.AddSingleton<IConnection>(sp =>
 {
-    var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<RabbitMqSettings>>().Value;
+    var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<RabbitMqOptions>>().Value;
     var factory = new ConnectionFactory
     {
-        HostName = settings.HostName,
+        HostName = settings.Host,
         Port = settings.Port,
-        UserName = settings.UserName,
+        UserName = settings.User,
         Password = settings.Password
     };
     return factory.CreateConnectionAsync("cart-service-listener").GetAwaiter().GetResult();
