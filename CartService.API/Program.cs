@@ -52,6 +52,7 @@ builder.Services.AddSingleton<IConnection>(sp =>
     };
     return factory.CreateConnectionAsync("cart-service-listener").GetAwaiter().GetResult();
 });
+builder.Services.AddScoped<IProductEventFacade, ProductEventFacade>();
 
 builder.Services.AddScoped<ProductUpdateService>();
 builder.Services.AddHostedService <ProductUpdateListener>();
