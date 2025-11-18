@@ -1,5 +1,6 @@
 ﻿using CartService.BLL;
 using CartService.Transversal.Classes.Messages;
+using CartService.Transversal.Classes.Models.Events;
 using Common.Utilities.Classes.Messaging.Options;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
@@ -19,6 +20,13 @@ namespace CartService.API.Infrastructure.RabbitMq
         {
             PropertyNameCaseInsensitive = true
         };
+
+        private static class EventNames
+        {
+            public const string ProductDeleted = "ProductDeletedEvent";
+            public const string ProductUpdated = "ProductUpdatedEvent";
+            public const string CategoryUpdated = "CategoryUpdatedEvent";
+        }
 
         private readonly IConnection _connection;
         private readonly RabbitMqOptions _settings;
@@ -119,85 +127,47 @@ namespace CartService.API.Infrastructure.RabbitMq
             return consumer;
         }
 
+        private EventEnvelope ParseEnvelope(string json)
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
+                string? type = root.TryGetProperty("eventType", out var et) ? et.GetString() : null;
+                Guid? productId = root.TryGetProperty("productId", out var pid) && pid.TryGetGuid(out var pGuid) ? pGuid : null;
+                Guid? categoryId = root.TryGetProperty("categoryId", out var cid) && cid.TryGetGuid(out var cGuid) ? cGuid : null;
+                return new EventEnvelope { EventType = type, ProductId = productId, CategoryId = categoryId, RawJson = json };
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogWarning(ex, "Malformed JSON message. Raw: {Raw}", json);
+                return new EventEnvelope { RawJson = json }; // Keep raw for logging; EventType null triggers default branch.
+            }
+        }
+
         private async Task ProcessMessageAsync(ReadOnlyMemory<byte> body, ulong deliveryTag, CancellationToken token)
         {
             try
             {
                 var json = Encoding.UTF8.GetString(body.Span);
-
-                // Parse eventType
-                string? eventType = null;
-                Guid? productId = null;
-                Guid? categoryId = null;
-                try
-                {
-                    using var doc = JsonDocument.Parse(json);
-                    var root = doc.RootElement;
-                    if (root.TryGetProperty("eventType", out var etProp))
-                    {
-                        eventType = etProp.GetString();
-                    }
-                    if (root.TryGetProperty("productId", out var pidProp) && pidProp.TryGetGuid(out var pid))
-                    {
-                        productId = pid;
-                    }
-                    if (root.TryGetProperty("categoryId", out var cidProp) && cidProp.TryGetGuid(out var cid))
-                    {
-                        categoryId = cid;
-                    }
-                }
-                catch (JsonException ex)
-                {
-                    _logger.LogWarning(ex, "Malformed JSON message. Raw: {Raw}", json);
-                }
-
+                var envelope = ParseEnvelope(json);
                 using var scope = _scopeFactory.CreateScope();
                 var updateService = scope.ServiceProvider.GetRequiredService<ProductUpdateService>();
 
-                switch (eventType)
+                switch (envelope.EventType)
                 {
-                    case "ProductDeletedEvent" when productId.HasValue:
-                    {
-                        var affectedDeletion = updateService.ApplyProductDeletion(productId.Value);
-                        _logger.LogInformation("Deletion processed. ProductId: {ProductId}. Affected carts: {Affected}", productId, affectedDeletion);
+                    case EventNames.ProductDeleted when envelope.ProductId.HasValue:
+                        HandleProductDeleted(updateService, envelope.ProductId.Value);
                         break;
-                    }
-                    case "ProductUpdatedEvent":
-                    {
-                        var msg = JsonSerializer.Deserialize<ProductUpdatedMessage>(json, _jsonOptions);
-                        if (msg == null)
-                        {
-                            _logger.LogWarning("Invalid ProductUpdatedEvent discarded. Raw: {Raw}", json);
-                            break; // Ack anyway
-                        }
-                        var affectedUpdate = updateService.ApplyProductUpdate(msg.ProductId, msg.Name, msg.Price, msg.CategoryId);
-                        _logger.LogInformation("Product update processed. ProductId: {ProductId}. Affected carts: {Affected}", msg.ProductId, affectedUpdate);
+                    case EventNames.ProductUpdated:
+                        HandleProductUpdated(updateService, envelope.RawJson);
                         break;
-                    }
-                    case "CategoryUpdatedEvent":
-                    {
-                        // Currently no cart impact unless dependent logic is added; log only
-                        var catMsg = JsonSerializer.Deserialize<CategoryUpdatedMessage>(json, _jsonOptions);
-                        if (catMsg == null)
-                        {
-                            _logger.LogWarning("Invalid CategoryUpdatedEvent discarded. Raw: {Raw}", json);
-                            break;
-                        }
-                        _logger.LogInformation("Category update received. CategoryId: {CategoryId}, Name: {Name}", catMsg.CategoryId, catMsg.Name);
+                    case EventNames.CategoryUpdated:
+                        HandleCategoryUpdated(envelope.RawJson);
                         break;
-                    }
                     default:
-                    {
-                        if (eventType != null)
-                        {
-                            _logger.LogWarning("Unhandled eventType {EventType}. Raw: {Raw}", eventType, json);
-                        }
-                        else
-                        {
-                            _logger.LogWarning("Missing eventType. Raw: {Raw}", json);
-                        }
+                        HandleUnknown(envelope);
                         break;
-                    }
                 }
             }
             catch (Exception ex)
@@ -208,16 +178,47 @@ namespace CartService.API.Infrastructure.RabbitMq
             {
                 if (_channel != null)
                 {
-                    try
-                    {
-                        await _channel.BasicAckAsync(deliveryTag, multiple: false, cancellationToken: token);
-                    }
-                    catch (Exception ackEx)
-                    {
-                        _logger.LogError(ackEx, "Failed to ACK message DeliveryTag {Tag}", deliveryTag);
-                    }
+                    try { await _channel.BasicAckAsync(deliveryTag, multiple: false, cancellationToken: token); }
+                    catch (Exception ackEx) { _logger.LogError(ackEx, "Failed to ACK message DeliveryTag {Tag}", deliveryTag); }
                 }
             }
+        }
+
+        private void HandleProductDeleted(ProductUpdateService svc, Guid productId)
+        {
+            var affected = svc.ApplyProductDeletion(productId);
+            _logger.LogInformation("Deletion processed. ProductId: {ProductId}. Affected carts: {Affected}", productId, affected);
+        }
+
+        private void HandleProductUpdated(ProductUpdateService svc, string rawJson)
+        {
+            var msg = JsonSerializer.Deserialize<ProductUpdatedMessage>(rawJson, _jsonOptions);
+            if (msg == null)
+            {
+                _logger.LogWarning("Invalid ProductUpdatedEvent discarded. Raw: {Raw}", rawJson);
+                return;
+            }
+            var affected = svc.ApplyProductUpdate(msg.ProductId, msg.Name, msg.Price, msg.CategoryId);
+            _logger.LogInformation("Product update processed. ProductId: {ProductId}. Affected carts: {Affected}", msg.ProductId, affected);
+        }
+
+        private void HandleCategoryUpdated(string rawJson)
+        {
+            var msg = JsonSerializer.Deserialize<CategoryUpdatedMessage>(rawJson, _jsonOptions);
+            if (msg == null)
+            {
+                _logger.LogWarning("Invalid CategoryUpdatedEvent discarded. Raw: {Raw}", rawJson);
+                return;
+            }
+            _logger.LogInformation("Category update received. CategoryId: {CategoryId}, Name: {Name}", msg.CategoryId, msg.Name);
+        }
+
+        private void HandleUnknown(EventEnvelope envelope)
+        {
+            if (envelope.EventType != null)
+                _logger.LogWarning("Unhandled eventType {EventType}. Raw: {Raw}", envelope.EventType, envelope.RawJson);
+            else
+                _logger.LogWarning("Missing eventType. Raw: {Raw}", envelope.RawJson);
         }
 
         public override void Dispose()
