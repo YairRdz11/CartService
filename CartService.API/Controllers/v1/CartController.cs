@@ -6,6 +6,7 @@ using CartService.Transversal.Classes.Models.Response;
 using CartService.Transversal.Interfaces.BLL;
 using Common.ApiUtilities.Classes.Common;
 using Common.Utilities.Classes.Common;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CartService.API.Controllers.v1
@@ -13,6 +14,7 @@ namespace CartService.API.Controllers.v1
     [ApiController]
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiVersion("1.0")]
+    [Authorize(Roles = "Manager,StoreCustomer")]
     public class CartController : ApiControllerBase
     {
         private readonly ICartService _cartService;
