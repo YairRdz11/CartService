@@ -47,13 +47,13 @@ namespace CartService.DAL.Classes
             return cartDto;
         }
 
-        public CartDTO SaveCart(CartDTO cartDto)
+        public CartDTO SaveCart(CartDTO cart)
         {
             var entity = new Cart
             {
-                Id = cartDto.Id,
-                CreatedAt = cartDto.CreatedAt ?? DateTime.UtcNow,
-                Items = cartDto.Items.Select(item => new CartItem
+                Id = cart.Id,
+                CreatedAt = cart.CreatedAt ?? DateTime.UtcNow,
+                Items = cart.Items.Select(item => new CartItem
                 {
                     Name = item.Name,
                     ProductId = item.ProductId,
@@ -84,35 +84,56 @@ namespace CartService.DAL.Classes
         public int UpdateProductInfo(Guid productId, string? name, decimal? price, Guid? categoryId)
         {
             var cartsCol = _db.GetCollection<Cart>("carts");
-            var affected = 0;
+            var affected =0;
 
             foreach (var cart in cartsCol.FindAll())
             {
+                if (cart.Items == null || cart.Items.Count ==0)
+                {
+                    continue;
+                }
+
                 var changed = false;
+
                 foreach (var item in cart.Items)
                 {
-                    if (item.ProductId == productId)
+                    if (item.ProductId != productId)
                     {
-                        if (name != null && item.Name != name)
-                        {
-                            item.Name = name;
-                            changed = true;
-                        }
-                        if (price.HasValue && item.Price != price.Value)
-                        {
-                            item.Price = price.Value;
-                            changed = true;
-                        }
+                        continue;
                     }
+
+                    changed |= UpdateItemFields(item, name, price);
                 }
-                if (changed)
+
+                if (!changed)
                 {
-                    cartsCol.Upsert(cart);
-                    affected++;
+                    continue;
                 }
+
+                cartsCol.Upsert(cart);
+                affected++;
             }
 
             return affected;
+        }
+
+        private static bool UpdateItemFields(CartItem item, string? name, decimal? price)
+        {
+            var changed = false;
+
+            if (!string.IsNullOrEmpty(name) && item.Name != name)
+            {
+                item.Name = name!;
+                changed = true;
+            }
+
+            if (price.HasValue && item.Price != price.Value)
+            {
+                item.Price = price.Value;
+                changed = true;
+            }
+
+            return changed;
         }
 
         public int RemoveProduct(Guid productId)
