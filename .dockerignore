@@ -1,0 +1,13 @@
+bin/
+obj/
+**/*.user
+**/*.suo
+*.cache
+*.log
+.vscode/
+.idea/
+**/appsettings.Development.json
+**/.env
+**/node_modules/
+**/TestResults/
+**/*.tsbuildinfo

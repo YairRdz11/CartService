@@ -6,8 +6,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Configure services
 builder.Services.AddControllers();
-builder.Services.AddJwtAuthentication(builder.Configuration);
-builder.Services.AddAuthorizationPolicies();
+//builder.Services.AddJwtAuthentication(builder.Configuration);
+//builder.Services.AddAuthorizationPolicies();
 builder.Services.AddSwaggerDocumentation(builder.Configuration);
 builder.Services.AddApplicationServices(builder.Configuration);
 builder.Services.AddApiVersioningConfiguration();
@@ -23,8 +23,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerDocumentation();
 }
 
-app.UseHttpsRedirection();
-app.UseAuthentication();
-app.UseAuthorization();
+//app.UseHttpsRedirection();
+//app.UseAuthentication();
+//app.UseAuthorization();
 app.MapControllers();
+
+app.MapGet("/", () => Results.Redirect("/swagger/index.html"));
 await app.RunAsync();

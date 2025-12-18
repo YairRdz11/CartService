@@ -1,0 +1,70 @@
+version: "3.9"
+
+services:
+  cartservice.api:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: cartservice.api
+    environment:
+      # ASP.NET Core
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+
+      # Authentication
+      Authentication__Authority: "https://localhost:5001"
+
+      # Swagger
+      Swagger__Title: "Cart API"
+      Swagger__Version: "v1"
+      Swagger__Description: "Cart Service API with JWT Authentication"
+      Swagger__Contact__Name: "Development Team"
+      Swagger__Contact__Email: "dev@example.com"
+      Swagger__Contact__Url: "https://example.com"
+      Swagger__License__Name: "MIT"
+      Swagger__License__Url: "https://opensource.org/licenses/MIT"
+      Swagger__EnableJwtAuthentication: "true"
+      Swagger__RoutePrefix: "swagger"
+      Swagger__DocumentTitle: "My API Documentation"
+
+      # Logging
+      Logging__LogLevel__Default: "Information"
+      Logging__LogLevel__Microsoft.AspNetCore: "Warning"
+
+      # AllowedHosts
+      AllowedHosts: "*"
+
+      # RabbitMQ (usar el nombre del servicio como host dentro de la red de docker)
+      RabbitMq__Host: "rabbitmq"
+      RabbitMq__Port: "5672"
+      RabbitMq__User: "guest"
+      RabbitMq__Password: "guest"
+      RabbitMq__Exchange: "catalog.integration"
+      RabbitMq__Queue: "cart.product-updates.q"
+      RabbitMq__RoutingKey: "product.updated"
+      RabbitMq__PrefetchCount: "20"
+
+      # LiteDb path
+      LiteDb__Path: "/data/ShoppingCart.db"
+
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    depends_on:
+      - rabbitmq
+    volumes:
+      - cartdata:/data
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmqcart
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: "guest"
+      RABBITMQ_DEFAULT_PASS: "guest"
+    restart: unless-stopped
+
+volumes:
+  cartdata:

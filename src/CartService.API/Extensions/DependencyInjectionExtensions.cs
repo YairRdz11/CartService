@@ -24,9 +24,10 @@ namespace CartService.API.Extensions
             services.AddAutoMapper(typeof(MappingProfile));
 
             // Database
-            services.AddSingleton<LiteDatabase>(_ =>
+            services.AddSingleton<LiteDatabase>(sp =>
             {
-                var dbPath = "ShoppingCart.db";
+                var config = sp.GetRequiredService<IConfiguration>();
+                var dbPath = config["LiteDb:Path"] ?? "/data/ShoppingCart.db";
                 return new LiteDatabase(dbPath);
             });
 

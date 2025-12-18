@@ -14,7 +14,7 @@ namespace CartService.API.Controllers.v1
     [ApiController]
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiVersion("1.0")]
-    [Authorize(Roles = "Manager,StoreCustomer")]
+    //[Authorize(Roles = "Manager,StoreCustomer")]
     public class CartController : ApiControllerBase
     {
         private readonly ICartService _cartService;
